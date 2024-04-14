@@ -134,6 +134,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ShowWindow(hwnd, SW_SHOW);
 
 	//
+	///	debugLayer
+	//
+#ifdef _DEBUG
+	
+
+
+
+#endif
+
+
+
+
+
+
+
+	//
 	//　DXGIFactoryの生成
 	//
 
