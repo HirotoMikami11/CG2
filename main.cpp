@@ -10,6 +10,8 @@
 #pragma comment(lib,"dxgi.lib")
 #include<cassert>
 
+#include<dxgidebug.h>
+#pragma comment(lib,"dxguid.lib")
 
 ///-----------------------------------------------///
 //			ウィンドウプロシージャ					　//
@@ -234,8 +236,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
 		// エラー時に止まる
 		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+		
+		
 		//警告時に止まる
+		/// 開放を忘れたことが判明した時、ここをコメントアウトしてログを確認することでどこを確認する
+		///　ここがコメントアウトされていない場合、警告は出るが、どのオブジェクトが残っているかはわからない。
+		/// 情報を得て修正したら必ずもとに戻して停止しないことを確認する！！
 		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+		
+		
 		//解放
 		infoQueue->Release();
 
@@ -462,6 +471,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			assert(SUCCEEDED(hr));
 
 		}
+	}
+
+	CloseHandle(fenceEvent);
+	fence->Release();
+	rtvDescriptorHeap->Release();
+	swapChainResources[0]->Release();
+	swapChainResources[1]->Release();
+	swapChain->Release();
+	commandList->Release();
+	commandAllocator->Release();
+	commandQueue->Release();
+	device->Release();
+	useAdapter->Release();
+	dxgiFactory->Release();
+#ifdef _DEBUG
+	debugController->Release();
+#endif // _DEBUG
+	CloseWindow(hwnd);
+
+	//リソースリークチェック
+	IDXGIDebug1* debug;
+	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
+		debug->ReportLiveObjects(DXGI_DEBUG_ALL,DXGI_DEBUG_RLO_ALL);
+		debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
+		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
+		debug->Release();
+
 	}
 
 	return 0;
