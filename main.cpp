@@ -123,7 +123,7 @@ IDxcBlob* CompileShader(
 		filePath.c_str(),		//コンパイル対象のhlslファイル名
 		L"-E",L"main",			//エントリーポイントの指定。基本的にmain以外にはしない
 		L"-T",profile,			//ShaderProfileの設定
-		L"-Zi",L"Qembed_debug"	//デバッグの情報を埋め込む
+		L"-Zi",L"Qembed_debug"	//デバッグの情報を埋め込む	(L"-Qembed_debug"でエラー)
 		L"-Od",					//最適化を外しておく
 		L"-Zpr",				//メモリレイアウトは行優先
 	};
