@@ -1,40 +1,34 @@
-#include<Windows.h>
+
 #include<cstdint>
-#include<string>
-#include<format>
+#include <Windows.h>
+#include <string>
+#include <format>
+#include <cassert>
 
-
-//*DirectX12の前準備*//
-#include<d3d12.h>
+#include <d3d12.h>
 #pragma comment(lib,"d3d12.lib")
-#include<dxgi1_6.h>
+#include <dxgi1_6.h>
 #pragma comment(lib,"dxgi.lib")
-#include<cassert>
-
-#include<dxgidebug.h>
+#include <dxgidebug.h>
 #pragma comment(lib,"dxguid.lib")
 
-//DXC
 #include <dxcapi.h>
 #pragma comment(lib,"dxcompiler.lib")
+
+#include "MyMath.h"
 
 //ImGui
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
-	HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-#include "MyMath.h"
+
 
 struct Vector4
 {
 	float x, y, z, w;
 };
-
-
-
-
 ///-----------------------------------------------///
 //			ウィンドウプロシージャ					　//
 ///-----------------------------------------------///
@@ -224,7 +218,7 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes) {
 }
 
 ///-----------------------------------------------///
-//				Resource作成の関数化					//
+//			DescriptorHeap作成の関数化			//
 ///-----------------------------------------------///
 ID3D12DescriptorHeap* CreateDescroptorHeap(
 	ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType,
@@ -250,8 +244,7 @@ ID3D12DescriptorHeap* CreateDescroptorHeap(
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-	//出力ウィンドウへの文字出力
-	OutputDebugStringA("Hello,DirectX!\n");
+
 
 	//
 	// ウィンドウクラスを登録する
@@ -319,9 +312,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
-
-
-
 	//
 	///　DXGIFactoryの生成
 	//
@@ -352,8 +342,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//ソフトウェアアダプタでなければ採用する
 		if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
 			// 採用したアダプタの情報をログに出力。wstring の方なので注意
-
-			///コンバートストリングしていいのかわからないのであとで調べる
 			Log(ConvertString(std::format(L"Use Adapater:{}\n", adapterDesc.Description)));
 
 
@@ -372,7 +360,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12Device* device = nullptr;
 	//機能レベルとログの出力用の文字列
 	D3D_FEATURE_LEVEL featureLevels[] = {
-		D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0
+		D3D_FEATURE_LEVEL_12_2,
+		D3D_FEATURE_LEVEL_12_1,
+		D3D_FEATURE_LEVEL_12_0
 	};
 
 	const char* featureLevelStrings[] = { "12.2","12.1","12.0" };
@@ -678,6 +668,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexBufferView.StrideInBytes = sizeof(Vector4);
 
 	//
+	/// Material用のResourceを作る
+	//
+
+	//マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意
+	ID3D12Resource* materialResource =
+		CreateBufferResource(device, sizeof(Vector4));
+	//マテリアルデータに書き込む
+	Vector4* materialData = nullptr;
+	//書き込むためのアドレスを取得
+	materialResource->
+		Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+	//今回は赤を書き込んでみる
+	*materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+
+
+	//
+	///	TransformationMatrix用のリソースを作る
+	//
+
+	//WVP用のリソースを作る、Matrix4x4　１つ分のサイズを用意する
+	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
+	//データを書き込む
+	Matrix4x4* wvpData = nullptr;
+	//書き込むためのアドレスを取得
+	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+	//単位行列を書き込んでおく
+	*wvpData = MakeIdentity4x4();
+
+	//
 	/// Resourceにデータを書き込む
 	//
 
@@ -717,34 +736,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	scissorRect.top = 0;
 	scissorRect.bottom = kClientHeight;
 
-	//
-	/// Material用のResourceを作る
-	//
 
-	//マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意
-	ID3D12Resource* materialResource =
-		CreateBufferResource(device, sizeof(Vector4));
-	//マテリアルデータに書き込む
-	Vector4* materialData = nullptr;
-	//書き込むためのアドレスを取得
-	materialResource->
-		Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-	//今回は赤を書き込んでみる
-	*materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	///ImGuiの初期化
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::StyleColorsDark();
+	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplDX12_Init(
+		device,
+		swapChainDesc.BufferCount,
+		rtvDesc.Format,
+		srvDescriptorHeap,
+		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
+	);
 
-
-	//
-	///	TransformationMatrix用のリソースを作る
-	//
-
-	//WVP用のリソースを作る、Matrix4x4　１つ分のサイズを用意する
-	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
-	//データを書き込む
-	Matrix4x4* wvpData = nullptr;
-	//書き込むためのアドレスを取得
-	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
-	//単位行列を書き込んでおく
-	*wvpData = MakeIdentity4x4();
+	///宣言
 
 	///Transforom変数を作る
 	Vector3Transform transform{
@@ -759,20 +766,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,-5.0f}
 	};
-
-	///ImGuiの初期化
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGui::StyleColorsDark();
-	ImGui_ImplWin32_Init(hwnd);
-	ImGui_ImplDX12_Init(
-		device,
-		swapChainDesc.BufferCount,
-		rtvDesc.Format,
-		srvDescriptorHeap,
-		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-
 
 	///-----------------------------------------------///
 	//					メインループ					　//
@@ -797,7 +790,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			///							///
 
 			
-			ImGui::ShowDemoWindow();
+	
 
 			//
 			///画面をクリアする処理が含まれたコマンドリストを作る
@@ -839,7 +832,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
 			commandList->SetDescriptorHeaps(1, descriptorHeaps);
 			
-			ImGui::Render();
+
+
 			//
 			///描画に必要なコマンドを積む
 			//
@@ -866,6 +860,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 描画（DrawCall／ドローコール）。３頂点で1つのインスタンス
 			commandList->DrawInstanced(3, 1, 0, 0);
 
+			ImGui::ShowDemoWindow();
+
+			transform.rotate.y += 0.03f;
+			Matrix4x4 worldMatrix = MakeAffineMatrix(
+				transform.scale, transform.rotate, transform.translate
+			);
+			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f,
+				float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+
+			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+
+			*wvpData = worldViewProjectionMatrix;
+
+
+
+			ImGui::Render();
 
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 
@@ -907,21 +919,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				WaitForSingleObject(fenceEvent, INFINITE);
 			}
 
-			transform.rotate.y += 0.03f;
-			Matrix4x4 worldMatrix = MakeAffineMatrix(
-				transform.scale, transform.rotate, transform.translate
-			);
-			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f,
-				float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
-
-			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-
-			*wvpData = worldViewProjectionMatrix;
-
-
-
 			//次のフレーム用のコマンドリストを準備
 			hr = commandAllocator->Reset();
 			assert(SUCCEEDED(hr));
@@ -930,6 +927,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		}
 	}
+
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
