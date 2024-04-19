@@ -3,6 +3,7 @@
 #include<string>
 #include<format>
 
+
 //*DirectX12の前準備*//
 #include<d3d12.h>
 #pragma comment(lib,"d3d12.lib")
@@ -17,11 +18,15 @@
 #include <dxcapi.h>
 #pragma comment(lib,"dxcompiler.lib")
 
+#include "MyMath.h"
 
 struct Vector4
 {
 	float x, y, z, w;
 };
+
+
+
 
 ///-----------------------------------------------///
 //			ウィンドウプロシージャ					　//
@@ -94,23 +99,23 @@ IDxcBlob* CompileShader(
 	//CompilerするShaderファイルへのパス
 	const std::wstring& filePath,
 	//Compilerに使用するProfile
-	const wchar_t* profile, 
+	const wchar_t* profile,
 	//初期化で生成したものを3つ
-	IDxcUtils* dxcUtils, 
-	IDxcCompiler3* dxcCompiler, 
+	IDxcUtils* dxcUtils,
+	IDxcCompiler3* dxcCompiler,
 	IDxcIncludeHandler* includeHandler)
 {
 	///hlslファイルの内容をDXCの機能を利用して読み、コンパイラに渡すための設定をしていく
 	//「これからシェーダーをコンパイルする」とログに出す
 	Log(ConvertString(std::format(L"Begin CompileShader, path:{},profile:{}\n", filePath, profile)));
-	
+
 	///1.hlslファイルを読み込む
-	
+
 	IDxcBlobEncoding* shaderSource = nullptr;
 	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
 	//読めなかったら停止する
 	assert(SUCCEEDED(hr));
-	
+
 	//読み込んだファイルの内容を設定する
 	DxcBuffer shaderSourceBuffer;
 	shaderSourceBuffer.Ptr = shaderSource->GetBufferPointer();
@@ -118,7 +123,7 @@ IDxcBlob* CompileShader(
 	shaderSourceBuffer.Encoding = DXC_CP_UTF8;//UTF8の文字コードであることを通知
 
 	///2.Compileする
-	
+
 	LPCWSTR arguments[] = {
 		filePath.c_str(),		//コンパイル対象のhlslファイル名
 		L"-E",L"main",			//エントリーポイントの指定。基本的にmain以外にはしない
@@ -177,7 +182,7 @@ IDxcBlob* CompileShader(
 //				Resource作成の関数化					//
 ///-----------------------------------------------///
 
-ID3D12Resource* CreateBufferResource(ID3D12Device* device,size_t sizeInBytes) {
+ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes) {
 	// 頂点リソース用のヒープの設定
 	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
 	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;	// UploadHeapを使う
@@ -529,14 +534,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags =
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	
+
 	// RootParameter作成。複数設定できるので配列。今回はConstantBuffer1つ読むだけなので長さ１の配列
-	D3D12_ROOT_PARAMETER rootParameters[1] = {};
+	D3D12_ROOT_PARAMETER rootParameters[2] = {};
 	//PS.hlslのregister（レジスタ）のb0のbと一致する
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	//CBVを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;	//PixelShaderで使う
 	//b0の0と一致する	b11と紐づけたいときは11を入れる
 	rootParameters[0].Descriptor.ShaderRegister = 0;					//レジスタ番号0とバインド
+
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	//CBVを使う
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;	//PixelShaderで使う
+	//b0の0と一致する	b11と紐づけたいときは11を入れる
+	rootParameters[1].Descriptor.ShaderRegister = 0;					//レジスタ番号0とバインド
 	descriptionRootSignature.pParameters = rootParameters;				//ルートパラメータ配列へのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters);	//配列の長さ
 
@@ -559,10 +569,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// InputLayoutの設定
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[1] = {};
-	inputElementDescs[0].SemanticName="POSITION";
-	inputElementDescs[0].SemanticIndex=0;
+	inputElementDescs[0].SemanticName = "POSITION";
+	inputElementDescs[0].SemanticIndex = 0;
 	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	inputElementDescs[0].AlignedByteOffset =D3D12_APPEND_ALIGNED_ELEMENT ;
+	inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
@@ -601,8 +611,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
 		pixelShaderBlob->GetBufferSize() };										// PixelShader
 	graphicsPipelineStateDesc.BlendState = blendDesc;							// BlendState
-	graphicsPipelineStateDesc. RasterizerState = rasterizerDesc;				// RasterizerState
-	
+	graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;				// RasterizerState
+
 	// 書き込むRTVの情報
 	graphicsPipelineStateDesc.NumRenderTargets = 1;
 	graphicsPipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -611,23 +621,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// どのように画面に色を打ち込むかの設定(気にしなくて良い)
 	graphicsPipelineStateDesc.SampleDesc.Count = 1;
 	graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
-	
+
 	// 実際に生成
 	ID3D12PipelineState* graphicsPipelineState = nullptr;
 	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
-			IID_PPV_ARGS(&graphicsPipelineState));
+		IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 
 	//
 	/// VertexResourcesを生成する
 	//
-	
-	ID3D12Resource*vertexResource = CreateBufferResource(device, sizeof(Vector4) * 3);
+
+	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(Vector4) * 3);
 
 	//
 	///VertexBufferviewを作成する
 	//
-	
+
 	//頂点バッファビューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	//リリースの先頭のアドレスから使う
@@ -683,7 +693,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意
 	ID3D12Resource* materialResource =
-		CreateBufferResource(device,sizeof(Vector4));
+		CreateBufferResource(device, sizeof(Vector4));
 	//マテリアルデータに書き込む
 	Vector4* materialData = nullptr;
 	//書き込むためのアドレスを取得
@@ -691,6 +701,37 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	//今回は赤を書き込んでみる
 	*materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+
+
+	//
+	///	TransformationMatrix用のリソースを作る
+	//
+
+	//WVP用のリソースを作る、Matrix4x4　１つ分のサイズを用意する
+	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
+	//データを書き込む
+	Matrix4x4* wvpData = nullptr;
+	//書き込むためのアドレスを取得
+	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+	//単位行列を書き込んでおく
+	*wvpData = MakeIdentity4x4();
+
+	///Transforom変数を作る
+	Vector3Transform transform{
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
+
+	/// WorldViewProjectionMatrixを作る
+	Vector3Transform cameraTransform{
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,-5.0f} 
+	};
+
+
+
 
 	///-----------------------------------------------///
 	//					メインループ					　//
@@ -752,7 +793,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			commandList->RSSetViewports(1, &viewport);					//Viewportを設定
 			commandList->RSSetScissorRects(1, &scissorRect);			//Scissorを設定
-			
+
 			// RootSignatureを設定。PSOに設定しているけど別途設定（PSOと同じもの）が必要
 			commandList->SetGraphicsRootSignature(rootSignature);
 			commandList->SetPipelineState(graphicsPipelineState);		//PSOを設定
@@ -760,10 +801,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 形状を設定。PSOに設定しているものとはまた別。RootSignatureと同じように同じものを設定すると考えておけばいい
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			//マテリアルのCBufferの場所を設定
+			
+			// マテリアルのCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(0,
 				materialResource->GetGPUVirtualAddress());
-			// 描画！（DrawCall／ドローコール）。３頂点で1つのインスタンス
+			
+			// wvp用のCBufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(1,
+				wvpResource->GetGPUVirtualAddress());
+			
+			// 描画（DrawCall／ドローコール）。３頂点で1つのインスタンス
 			commandList->DrawInstanced(3, 1, 0, 0);
 
 
@@ -805,6 +852,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				WaitForSingleObject(fenceEvent, INFINITE);
 			}
 
+			transform.rotate.y += 0.03f;
+			Matrix4x4 worldMatrix = MakeAffineMatrix(
+				transform.scale, transform.rotate, transform.translate
+			);
+			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate );
+			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f,
+				float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+
+			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+			
+			*wvpData =worldViewProjectionMatrix;
+
+
+
 			//次のフレーム用のコマンドリストを準備
 			hr = commandAllocator->Reset();
 			assert(SUCCEEDED(hr));
@@ -830,6 +892,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	pixelShaderBlob->Release();
 	vertexShaderBlob->Release();
 	materialResource->Release();
+	wvpResource->Release();
 
 	///
 	CloseHandle(fenceEvent);
