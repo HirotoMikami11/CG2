@@ -226,17 +226,14 @@ ID3D12DescriptorHeap* CreateDescroptorHeap(
 	//ディスクリプイヒープの生成
 	ID3D12DescriptorHeap* descriptorHeap = nullptr;
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{};
-	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;								//レンダーターゲットビュー用
-	descriptorHeapDesc.NumDescriptors = 2;													//バブルバッファ用に２つ。多くても構わない
+	descriptorHeapDesc.Type = heapType;								//レンダーターゲットビュー用
+	descriptorHeapDesc.NumDescriptors = numDescriptors;													//バブルバッファ用に２つ。多くても構わない
+	descriptorHeapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	HRESULT hr = device->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&descriptorHeap));
 	// ディスクリプタヒープが作れなかったら起動できない
 	assert(SUCCEEDED(hr));
 	return descriptorHeap;
 }
-
-
-
-
 
 ///-----------------------------------------------///
 //					メイン関数					　//
