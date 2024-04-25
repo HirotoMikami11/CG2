@@ -24,7 +24,6 @@
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 
-
 struct Vector4
 {
 	float x, y, z, w;
@@ -235,13 +234,24 @@ ID3D12DescriptorHeap* CreateDescroptorHeap(
 	return descriptorHeap;
 }
 
+
+
+///-----------------------------------------------///
+//				TextureResourceを作る		　		//
+///-----------------------------------------------///
+
+//ID3D12Resource* CreateTextureResource(ID3D12Device* device,const DirectX::TexMetadata)
+
+
+
 ///-----------------------------------------------///
 //					メイン関数					　//
 ///-----------------------------------------------///
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-
+	//COMの初期化
+	CoInitializeEx(0, COINITBASE_MULTITHREADED);
 
 	//
 	// ウィンドウクラスを登録する
@@ -975,6 +985,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		debug->Release();
 
 	}
+
+	//COMの終了処理
+	CoUninitialize();
 
 	return 0;
 
