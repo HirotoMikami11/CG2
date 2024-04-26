@@ -4,12 +4,35 @@
 #include "cassert"
 
 /// <summary>
+/// 2次元ベクトル
+/// </summary>
+struct Vector2
+{
+	float x, y;
+};
+
+/// <summary>
 /// 3次元ベクトル
 /// </summary>
 struct Vector3 final {
 	float x;
 	float y;
 	float z;
+};
+
+/// <summary>
+/// 4次元ベクトル
+/// </summary>
+struct Vector4
+{
+	float x, y, z, w;
+};
+/// <summary>
+/// 頂点データ
+/// </summary>
+struct VertexData {
+	Vector4 position;//座標
+	Vector2 texcoord;//テクスチャ座標系（TextureCoordinate）の略
 };
 
 /// <summary>
