@@ -1,0 +1,136 @@
+'CG2_00_01.exe' (Win32): 'C:\Users\k023g\OneDrive\デスクトップ\CG2\CG2_00_01\x64\Debug\CG2_00_01.exe' が読み込まれました。シンボルが読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\ntdll.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\kernel32.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\KernelBase.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\user32.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\win32u.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\gdi32.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\gdi32full.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\msvcp_win.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\ucrtbase.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\ole32.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\combase.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\rpcrt4.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\imm32.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\D3DCompiler_47.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\D3D12.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\dwmapi.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\dxgi.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\cryptsp.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\vcomp140d.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Users\k023g\OneDrive\デスクトップ\CG2\CG2_00_01\x64\Debug\dxcompiler.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\oleaut32.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\advapi32.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\msvcrt.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\sechost.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\bcrypt.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Users\k023g\OneDrive\デスクトップ\CG2\CG2_00_01\x64\Debug\dxil.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\kernel.appcore.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\bcryptprimitives.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\uxtheme.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\ProgramData\A-Volute\A-Volute.Nahimic\Modules\Scheduled\x64\AudioDevProps2.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\ws2_32.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\shlwapi.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\shell32.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\msctf.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\TextInputFramework.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\CoreMessaging.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\CoreUIComponents.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\WinTypes.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\cryptbase.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\D3D12Core.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DXGIDebug.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\d3d12SDKLayers.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DXCore.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\ResourcePolicyClient.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\ResourcePolicyClient.dll' がアンロードされました
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\directxdatabasehelper.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DriverStore\FileRepository\nvmi.inf_amd64_485755b99952279d\nvdlistx.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\version.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\version.dll' がアンロードされました
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DriverStore\FileRepository\nvmi.inf_amd64_485755b99952279d\nvdlistx.dll' がアンロードされました
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DriverStore\FileRepository\nvmi.inf_amd64_485755b99952279d\nvdlistx.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\version.dll' が読み込まれました。
+Use Adapater:NVIDIA GeForce RTX 3060 Laptop GPU
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\cfgmgr32.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DriverStore\FileRepository\nvmi.inf_amd64_485755b99952279d\nvldumdx.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\msasn1.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\cryptnet.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\crypt32.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\crypt32.dll' がアンロードされました
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\crypt32.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\drvstore.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\devobj.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\wldp.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\wintrust.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\imagehlp.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DriverStore\FileRepository\nvmi.inf_amd64_485755b99952279d\nvdlistx.dll' がアンロードされました
+スレッド 7756 はコード 0 (0x0) で終了しました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\rsaenh.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DriverStore\FileRepository\nvmi.inf_amd64_485755b99952279d\nvwgf2umx.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\winmm.dll' が読み込まれました。
+スレッド 28484 はコード 0 (0x0) で終了しました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DriverStore\FileRepository\nvmi.inf_amd64_485755b99952279d\NvCamera\NvCameraAllowlisting64.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DriverStore\FileRepository\nvmi.inf_amd64_485755b99952279d\NvCamera\NvCameraAllowlisting64.dll' がアンロードされました
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\windows.storage.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\SHCore.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\nvspcap64.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\profapi.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\ntmarta.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\dxilconv.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\D3DSCache.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\userenv.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\twinapi.appcore.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\dxilconv.dll' がアンロードされました
+D3D12 MESSAGE: Device Debug Layer Startup Options: GPU-Based Validation is enabled (disabled by default). This results in new validation not possible during API calls on the CPU, by creating patched shaders that have validation added directly to the shader. However, it can slow things down a lot, especially for applications with numerous PSOs. Time to see the first render frame may take several minutes. [ INITIALIZATION MESSAGE #1016: CREATEDEVICE_DEBUG_LAYER_STARTUP_OPTIONS]
+FeatureLevel : 12.2
+Complete create D3D12Device!!!
+ 'CG2_00_01.exe' (Win32): 'C:\Windows\System32\d3d11.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_357acc06f2c40efb\igd10iumd64.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\apphelp.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_357acc06f2c40efb\igd10um64xe.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\ncrypt.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\ntasn1.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\ControlLib.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\setupapi.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_357acc06f2c40efb\IntelControlLib.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_357acc06f2c40efb\igdgmm64.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_357acc06f2c40efb\igc64.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\dcomp.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\clbcatq.dll' が読み込まれました。
+'CG2_00_01.exe' (Win32): 'C:\Windows\System32\WindowsCodecs.dll' が読み込まれました。
+Begin CompileShader, path:Object3D.VS.hlsl,profile:vs_6_0
+In file included from Qembed_debug-Od:1:
+./object3d.hlsli:4:5: error: unknown type name 'flaot32_t2'
+    flaot32_t2 texcoord : TEXCOORD0;
+    ^
+Assertion failed!
+
+Program: ...Drive\デスクトップ\CG2\CG2_00_01\x64\Debug\CG2_00_01.exe
+File: C:\Users\k023g\OneDrive\デスクトップ\CG2\CG2_00_01\main.cpp
+Line: 156
+
+Expression: false
+
+For information on how your program can cause an assertion
+failure, see the Visual C++ documentation on asserts
+
+(Press Retry to debug the application - JIT must be enabled)'CG2_00_01.exe' (Win32): 'C:\Windows\System32\TextShaping.dll' が読み込まれました。
+スレッド 27860 はコード 3 (0x3) で終了しました。
+スレッド 'D3D Background Thread 0' (31980) はコード 3 (0x3) で終了しました。
+スレッド 11904 はコード 3 (0x3) で終了しました。
+スレッド 20168 はコード 3 (0x3) で終了しました。
+スレッド 33180 はコード 3 (0x3) で終了しました。
+スレッド 6396 はコード 3 (0x3) で終了しました。
+スレッド 'D3D Background Thread 1' (30760) はコード 3 (0x3) で終了しました。
+スレッド 24664 はコード 3 (0x3) で終了しました。
+スレッド 'D3D Background Thread 2' (24784) はコード 3 (0x3) で終了しました。
+スレッド 23004 はコード 3 (0x3) で終了しました。
+スレッド 28272 はコード 3 (0x3) で終了しました。
+スレッド 7000 はコード 3 (0x3) で終了しました。
+スレッド 'D3D Background Thread 3' (23360) はコード 3 (0x3) で終了しました。
+スレッド 13732 はコード 3 (0x3) で終了しました。
+D3D12 WARNING: Process is terminating. Using simple reporting. Please call ReportLiveObjects() at runtime for standard reporting. [ STATE_CREATION WARNING #0: UNKNOWN]
+D3D12: **BREAK** enabled for the previous message, which was: [ WARNING STATE_CREATION #0: UNKNOWN ]
+0x00007FFDFA735B0C (KernelBase.dll) で例外がスローされました (CG2_00_01.exe 内): 0x0000087A (パラメーター: 0x0000000000000002, 0x00000058192F96A0, 0x00000058192FA3F0)
+プログラム '[31492] CG2_00_01.exe' はコード 3 (0x3) で終了しました。
