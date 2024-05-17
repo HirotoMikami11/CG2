@@ -353,6 +353,80 @@ ID3D12Resource* CreateDepthStenciTextureResource(ID3D12Device* device, int32_t w
 	return resource;
 }
 
+void CreateSphereVertexData(VertexData vertexData[]) {
+	const uint32_t kSubdivision = 10;						//分割数
+
+	//経度分割1つ分の角度
+	const float kLonEvery = (2 * float(M_PI)) / kSubdivision;
+	//緯度分割1つ分の角度
+	const float kLatEvery = float(M_PI) / kSubdivision;
+
+	// φd=klon　経度
+	// φ=lon　経度
+
+	// θd=klat　緯度
+	// θ=lat　緯度
+
+
+	//緯度の方向に分割 -π/2 ~-π/2
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+		float lat = (-float(M_PI) / 2.0f) + kLatEvery * latIndex;//現在の緯度
+
+		//経度の方向に分割0 ~ 2π
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+			//*6しているのは4つの位置を6頂点(三角形２つの)データに書き込むから
+			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
+			float lon = lonIndex * kLonEvery;//現在の経度
+
+			//頂点データを入力する
+
+			//a
+			vertexData[start].position.x = cos(lat) * cos(lon);
+			vertexData[start].position.y = sin(lat);
+			vertexData[start].position.z = cos(lat) * sin(lon);
+			vertexData[start].position.w = 1.0f;
+			vertexData[start].texcoord = { static_cast<float>(lonIndex) / kSubdivision, static_cast<float>(latIndex + 1) / kSubdivision };
+
+			//b
+			vertexData[start + 1].position.x = cos(lat + kLatEvery) * cos(lon);
+			vertexData[start + 1].position.y = sin(lat + kLatEvery);
+			vertexData[start + 1].position.z = cos(lat + kLatEvery) * sin(lon);
+			vertexData[start + 1].position.w = 1.0f;
+			vertexData[start + 1].texcoord = { static_cast<float>(lonIndex) / kSubdivision, static_cast<float>(latIndex) / kSubdivision };
+
+			//c
+			vertexData[start + 2].position.x = cos(lat) * cos(lon + kLonEvery);
+			vertexData[start + 2].position.y = sin(lat);
+			vertexData[start + 2].position.z = cos(lat) * sin(lon + kLonEvery);
+			vertexData[start + 2].position.w = 1.0f;
+			vertexData[start + 2].texcoord = { static_cast<float>(lonIndex + 1) / kSubdivision, static_cast<float>(latIndex + 1) / kSubdivision };
+
+			//b
+			vertexData[start + 3].position.x = cos(lat + kLatEvery) * cos(lon);
+			vertexData[start + 3].position.y = sin(lat + kLatEvery);
+			vertexData[start + 3].position.z = cos(lat + kLatEvery) * sin(lon);
+			vertexData[start + 3].position.w = 1.0f;
+			vertexData[start + 3].texcoord = { static_cast<float>(lonIndex) / kSubdivision, static_cast<float>(latIndex) / kSubdivision };
+
+			//d
+			vertexData[start + 4].position.x = cos(lat + kLatEvery) * cos(lon + kLonEvery);
+			vertexData[start + 4].position.y = sin(lat + kLatEvery);
+			vertexData[start + 4].position.z = cos(lat + kLatEvery) * sin(lon + kLonEvery);
+			vertexData[start + 4].position.w = 1.0f;
+			vertexData[start + 4].texcoord = { static_cast<float>(lonIndex + 1) / kSubdivision, static_cast<float>(latIndex) / kSubdivision };
+
+			//c
+			vertexData[start + 5].position.x = cos(lat) * cos(lon + kLonEvery);
+			vertexData[start + 5].position.y = sin(lat);
+			vertexData[start + 5].position.z = cos(lat) * sin(lon + kLonEvery);
+			vertexData[start + 5].position.w = 1.0f;
+			vertexData[start + 5].texcoord = { static_cast<float>(lonIndex + 1) / kSubdivision, static_cast<float>(latIndex + 1) / kSubdivision };
+
+		}
+	}
+}
+
+
 ///-----------------------------------------------///
 //					メイン関数					　//
 ///-----------------------------------------------///
@@ -986,7 +1060,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Matrix4x4* transformationMatrixDataSprite = nullptr;
 	//書き込むためのアドレスを取得
 	transformationMatrixResourceSprite->
-		Map(0, nullptr, 
+		Map(0, nullptr,
 			reinterpret_cast<void**>
 			(&transformationMatrixDataSprite));
 	//単位行列を書き込んでおく
@@ -1199,8 +1273,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			ImGui::ShowDemoWindow();
 			ImGui::Begin("setting");
-			ImGui::ColorPicker3("material",&materialData->x);
-			ImGui::DragFloat3("Sprite_Translate",&transformSprite.translate.x,0.01f);
+			ImGui::ColorPicker3("material", &materialData->x);
+			ImGui::DragFloat3("Sprite_Translate", &transformSprite.translate.x, 0.01f);
 
 			ImGui::End();
 
@@ -1218,18 +1292,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			*wvpData = worldViewProjectionMatrix;
 
-			
-			
+
+
 			/// Sprite用のWorldViewProjectionMatrixを作る
 			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(
 				transformSprite.scale,
-				transformSprite.rotate, 
+				transformSprite.rotate,
 				transformSprite.translate);
 			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-			Matrix4x4 projectionMatrixSprite = 
+			Matrix4x4 projectionMatrixSprite =
 				MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
 			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
-			
+
 			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
 
 
