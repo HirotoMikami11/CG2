@@ -650,7 +650,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// DepthStencilTextureをウィンドウのサイズで作成
 	ID3D12Resource* depthStencilResource = CreateDepthStenciTextureResource(device, kClientWidth, kClientHeight);
-	
+
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;			//Formatは基本的にResourceに合わせる
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;	//2dTexture
@@ -860,7 +860,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12PipelineState* graphicsPipelineState = nullptr;
 	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
 		IID_PPV_ARGS(&graphicsPipelineState));
-	
+
 
 
 	assert(SUCCEEDED(hr));
@@ -873,9 +873,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//二つ作りたいので6
 	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
 
+	//Sprite用の頂点リソース
+	//三角形２枚で矩形を描画できるので三角形２つ分のデータを用意する
+	ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
+
 	//
 	///VertexBufferviewを作成する
 	//
+
+	///三角形のBufferView
 
 	//頂点バッファビューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
@@ -886,6 +892,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexBufferView.SizeInBytes = sizeof(VertexData) * 6;
 	// 1頂点あたりのサイズ
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+	///矩形のBufferView
+
+	//頂点バッファビューを作成する
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	//リリースの先頭のアドレスから使う
+	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
+	//使用するリソースのサイズは頂点3つ分のサイズ
+	//二つ分なので６
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * 6;
+	// 1頂点あたりのサイズ
+	vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+
+
 
 	//
 	/// Material用のResourceを作る
@@ -918,8 +939,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//
 	/// Resourceにデータを書き込む
 	//
-	// 
-	// 頂点リソースにデータを書き込む
+
+	
+	/// 三角形の頂点リソースにデータを書き込む
 	VertexData* vertexData = nullptr;
 	// 書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
@@ -943,6 +965,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 右下
 	vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
 	vertexData[5].texcoord = { 1.0f, 1.0f };
+
+	///矩形の頂点リソースにデータを書き込む
+	VertexData* vertexDataSprite = nullptr;
+	vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
+	//1枚目の三角形
+	vertexDataSprite[0]
+	vertexDataSprite[0]
+	//2枚目の三角形
 
 	//
 	///	ビューポート
@@ -1057,7 +1087,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//
 			/// TransitionBarierを張る処理ここまで
 			//
-		
+
 			//描画先のRTVとDSVを設定する
 			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 			commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
