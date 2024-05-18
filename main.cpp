@@ -354,7 +354,8 @@ ID3D12Resource* CreateDepthStenciTextureResource(ID3D12Device* device, int32_t w
 }
 
 void CreateSphereVertexData(VertexData vertexData[]) {
-	const uint32_t kSubdivision = 10;						//分割数
+
+	const uint32_t kSubdivision = 16;						//分割数
 
 	//経度分割1つ分の角度
 	const float kLonEvery = (2 * float(M_PI)) / kSubdivision;
@@ -375,9 +376,8 @@ void CreateSphereVertexData(VertexData vertexData[]) {
 		//経度の方向に分割0 ~ 2π
 		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
 			//*6しているのは4つの位置を6頂点(三角形２つの)データに書き込むから
-			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
 			float lon = lonIndex * kLonEvery;//現在の経度
-
+		uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
 			//頂点データを入力する
 
 			//a
@@ -413,7 +413,7 @@ void CreateSphereVertexData(VertexData vertexData[]) {
 			vertexData[start + 4].position.y = sin(lat + kLatEvery);
 			vertexData[start + 4].position.z = cos(lat + kLatEvery) * sin(lon + kLonEvery);
 			vertexData[start + 4].position.w = 1.0f;
-			vertexData[start + 4].texcoord = { static_cast<float>(lonIndex + 1) / kSubdivision, static_cast<float>(latIndex) / kSubdivision };
+			vertexData[start + 4].texcoord = { static_cast<float>(lonIndex +1) / kSubdivision, static_cast<float>(latIndex) / kSubdivision };
 
 			//c
 			vertexData[start + 5].position.x = cos(lat) * cos(lon + kLonEvery);
@@ -421,7 +421,7 @@ void CreateSphereVertexData(VertexData vertexData[]) {
 			vertexData[start + 5].position.z = cos(lat) * sin(lon + kLonEvery);
 			vertexData[start + 5].position.w = 1.0f;
 			vertexData[start + 5].texcoord = { static_cast<float>(lonIndex + 1) / kSubdivision, static_cast<float>(latIndex + 1) / kSubdivision };
-
+		
 		}
 	}
 }
@@ -948,9 +948,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//
 
 
-	//三角形1つに3つの頂点
-	//二つ作りたいので6
-	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
+	//球体を作成
+	//縦の分割数*横の分割数*調点数（6）
+	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * (16*16*6));
 
 	//
 	///VertexBufferviewを作成する
@@ -962,7 +962,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 	//使用するリソースのサイズは頂点3つ分のサイズ
 	//二つ分なので６
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * 6;
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * (16*16*6);
 	// 1頂点あたりのサイズ
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
@@ -1007,25 +1007,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 
-	// 左下
-	vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
-	vertexData[0].texcoord = { 0.0f, 1.0f };
-	// 上
-	vertexData[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
-	vertexData[1].texcoord = { 0.5f, 0.0f };
-	// 右下
-	vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
-	vertexData[2].texcoord = { 1.0f, 1.0f };
 
-	// 左下
-	vertexData[3].position = { -0.5f, -0.5f, 0.5f, 1.0f };
-	vertexData[3].texcoord = { 0.0f, 1.0f };
-	// 上
-	vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
-	vertexData[4].texcoord = { 0.5f, 0.0f };
-	// 右下
-	vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
-	vertexData[5].texcoord = { 1.0f, 1.0f };
+	CreateSphereVertexData(vertexData);
 
 
 
@@ -1153,7 +1136,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3Transform cameraTransform{
 		{1.0f,1.0f,1.0f},
 		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,-5.0f}
+		{0.0f,0.0f,-10.0f}
 	};
 
 
@@ -1255,7 +1238,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 描画（DrawCall／ドローコール）。３頂点で1つのインスタンス
 			//三角形を二つ描画するので6つ
-			commandList->DrawInstanced(6, 1, 0, 0);
+			commandList->DrawInstanced(16*16*6, 1, 0, 0);
 
 
 			///
