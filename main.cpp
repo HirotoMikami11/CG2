@@ -355,6 +355,86 @@ ID3D12Resource* CreateDepthStenciTextureResource(ID3D12Device* device, int32_t w
 	return resource;
 }
 
+
+void DrawImGui() {
+
+	ImGui::ShowDemoWindow();
+	if (ImGui::Begin("Settings")) {
+		// トップレベルのツリーノード: Settings
+		if (ImGui::TreeNode("Settings")) {
+
+			// モデル選択のためのコンボボックス
+			const char* items[] = { "Triangle", "Square", "Circle" };
+			static int item_current = 0;
+			ImGui::Combo("##model", &item_current, items, IM_ARRAYSIZE(items));
+			ImGui::SameLine();
+			ImGui::Text("Model");
+
+			// Createボタン
+			if (ImGui::Button("Create")) {
+				// ボタンが押されたときの処理
+			}
+
+			// Objectノード
+			if (ImGui::TreeNode("Object")) {
+				// Translate, Rotate, Scaleの各フィールド
+				/*ImGui::InputFloat3("##Translate", (float[]) { 0.0f, -0.75f, 0.0f }, "%.3f", ImGuiInputTextFlags_ReadOnly);*/
+				ImGui::SameLine();
+				ImGui::Text("Translate");
+
+				/*ImGui::InputFloat3("##Rotate", (float[]) { 0.0f, 0.0f, 0.0f }, "%.3f", ImGuiInputTextFlags_ReadOnly);*/
+				ImGui::SameLine();
+				ImGui::Text("Rotate");
+
+	/*			ImGui::InputFloat3("##Scale", (float[]) { 1.0f, 0.71f, 1.0f }, "%.3f", ImGuiInputTextFlags_ReadOnly);*/
+				ImGui::SameLine();
+				ImGui::Text("Scale");
+
+				if (ImGui::Button("Delete")) {
+					// Deleteボタンが押されたときの処理
+				}
+
+				ImGui::TreePop();
+			}
+
+			// Materialノード
+			if (ImGui::TreeNode("Material")) {
+				// Objectノード
+				if (ImGui::TreeNode("Object")) {
+					// Translate, Rotate, Scaleの各フィールド
+		/*			ImGui::InputFloat3("##Translate2", (float[]) { 0.0f, -0.28f, 0.0f }, "%.3f", ImGuiInputTextFlags_ReadOnly);*/
+					ImGui::SameLine();
+					ImGui::Text("Translate");
+
+				/*	ImGui::InputFloat3("##Rotate2", (float[]) { 0.0f, 0.97f, 0.0f }, "%.3f", ImGuiInputTextFlags_ReadOnly);*/
+					ImGui::SameLine();
+					ImGui::Text("Rotate");
+
+					//ImGui::InputFloat3("##Scale2", (float[]) { 1.0f, 1.0f, 1.0f }, "%.3f", ImGuiInputTextFlags_ReadOnly);
+					ImGui::SameLine();
+					ImGui::Text("Scale");
+
+					if (ImGui::Button("Delete")) {
+						// Deleteボタンが押されたときの処理
+					}
+
+					ImGui::TreePop();
+				}
+				ImGui::TreePop();
+			}
+
+			// Lightノード
+			ImGui::TreeNode("Light");
+			ImGui::TreePop();
+		}
+
+		ImGui::End();
+	}
+}
+
+
+
+
 ///-----------------------------------------------///
 //					メイン関数					　//
 ///-----------------------------------------------///
@@ -957,66 +1037,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
-	///*========		矩形Sprite		========*///
-	//
-	/// Sprite用のVertexResourcesを生成する
-	//
-
-	//三角形２枚で矩形を描画できるので三角形２つ分のデータを用意する
-	ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
-
-	//
-	///	Sprite用のVertexBufferviewを作成する
-	//
-	//頂点バッファビューを作成する
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite{};
-	//リリースの先頭のアドレスから使う
-	vertexBufferViewSprite.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress();
-	//使用するリソースのサイズは頂点3つ分のサイズ
-	//二つ分なので６
-	vertexBufferViewSprite.SizeInBytes = sizeof(VertexData) * 6;
-	// 1頂点あたりのサイズ
-	vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
-
-	//
-	///	Sprite用のTransformationMatrix用のリソースを作る
-	//
-
-	ID3D12Resource* transformationMatrixResourceSprite =
-		CreateBufferResource(device, sizeof(Matrix4x4));
-	//データを書き込む
-	Matrix4x4* transformationMatrixDataSprite = nullptr;
-	//書き込むためのアドレスを取得
-	transformationMatrixResourceSprite->
-		Map(0, nullptr, 
-			reinterpret_cast<void**>
-			(&transformationMatrixDataSprite));
-	//単位行列を書き込んでおく
-	*transformationMatrixDataSprite = MakeIdentity4x4();
-
-	//
-	/// Sprite用のResourceにデータを書き込む
-	//
-
-	///矩形の頂点リソースにデータを書き込む
-	VertexData* vertexDataSprite = nullptr;
-	vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
-	//1枚目の三角形
-	vertexDataSprite[0].position = { 0.0f,360.0f,0.0f,1.0f };//左下
-	vertexDataSprite[0].texcoord = { 0.0,1.0 };
-	vertexDataSprite[1].position = { 0.0f,0.0f,0.0f,1.0f };//左上
-	vertexDataSprite[1].texcoord = { 0.0f,0.0f };
-	vertexDataSprite[2].position = { 640.0f,360.0f,0.0f,1.0f };//右上
-	vertexDataSprite[2].texcoord = { 1.0f,1.0f };
-	//2枚目の三角形
-	vertexDataSprite[3].position = { 0.0f,0.0f,0.0f,1.0f };//左下
-	vertexDataSprite[3].texcoord = { 0.0,0.0 };
-	vertexDataSprite[4].position = { 640.0f,0.0f,0.0f,1.0f };//左上
-	vertexDataSprite[4].texcoord = { 1.0f,0.0f };
-	vertexDataSprite[5].position = { 640.0f,360.0f,0.0f,1.0f };//右上
-	vertexDataSprite[5].texcoord = { 1.0f,1.0f };
-
-
 	//
 	///	ビューポート
 	//
@@ -1069,12 +1089,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{0.0f,0.0f,0.0f}
 	};
 
-	///Sprite用のTransforom変数を作る
-	Vector3Transform transformSprite{
-		{1.0f,1.0f,1.0f},
-		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,0.0f}
-	};
 
 
 	/// WorldViewProjectionMatrixを作る
@@ -1185,26 +1199,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//三角形を二つ描画するので6つ
 			commandList->DrawInstanced(6, 1, 0, 0);
 
-
-			///
-			///	2Dの描画
-			/// 
-
-			//Spriteの描画
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-			//TransformMatrixCBufferの場所を設定
-			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-			// 描画（DrawCall／ドローコール）。３頂点で1つのインスタンス
-			//三角形を二つ描画するので6つ
-			commandList->DrawInstanced(6, 1, 0, 0);
-
-
-			ImGui::ShowDemoWindow();
-			ImGui::Begin("setting");
-			ImGui::ColorPicker3("material",&materialData->x);
-			ImGui::DragFloat3("Sprite_Translate",&transformSprite.translate.x,0.01f);
-
-			ImGui::End();
+			DrawImGui();
 
 			transform.rotate.y += 0.01f;
 			/// 三角形のwvp行列を作成
@@ -1220,19 +1215,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			*wvpData = worldViewProjectionMatrix;
 
-			
-			
-			/// Sprite用のWorldViewProjectionMatrixを作る
-			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(
-				transformSprite.scale,
-				transformSprite.rotate, 
-				transformSprite.translate);
-			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-			Matrix4x4 projectionMatrixSprite = 
-				MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
-			
-			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
 
 
 
@@ -1297,9 +1279,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
-	///Spriteを生成するのに必要なもの
-	vertexResourceSprite->Release();
-	transformationMatrixResourceSprite->Release();
+
 
 	///デプスステンシルリソース
 	depthStencilResource->Release();
