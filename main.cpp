@@ -4,6 +4,7 @@
 #include <string>
 #include <format>
 #include <cassert>
+#include <vector>
 
 #include <d3d12.h>
 #pragma comment(lib,"d3d12.lib")
@@ -17,6 +18,7 @@
 
 #include "MyMath.h"
 #include"externals/DirectXTex/DirectXTex.h"
+#include"externals/DirectXTex/d3dx12.h"
 
 //ImGui
 #include "externals/imgui/imgui.h"
@@ -270,9 +272,9 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
 
 	//利用するHeapの設定（非常に特殊な運用方法）
 	D3D12_HEAP_PROPERTIES heapProperties{};
-	heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;							//細かい設定を行う
-	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;	//WriteBackポリシーでCPUアクセス可能
-	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;				//プロセッサの近くに配置
+	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT; //細かい設定を行う
+	//heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;	//WriteBackポリシーでCPUアクセス可能
+	//heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;				//プロセッサの近くに配置
 
 	//Resourceの生成
 	ID3D12Resource* resource = nullptr;
@@ -280,34 +282,33 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
 		&heapProperties,
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
+		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
 		IID_PPV_ARGS(&resource));
 	assert(SUCCEEDED(hr));
 	return resource;
 }
 
-void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages)
-{
-	//Meta情報を取得
-	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-	//全MipMapについて
-	for (size_t mipLevel = 0; mipLevel < metadata.mipLevels; ++mipLevel) {
-		//MipMapLevelを指定して各Imageを取得
-		const DirectX::Image* img = mipImages.GetImage(mipLevel, 0, 0);
-		//textureに転送
-		HRESULT hr = texture->WriteToSubresource(
-			UINT(mipLevel),
-			nullptr,				//全領域へコピー
-			img->pixels,			//元データのアドレス
-			UINT(img->rowPitch),	//１ラインサイズ
-			UINT(img->slicePitch)	//１枚サイズ
-		);
-		assert(SUCCEEDED(hr));
-	}
+[[nodiscard]]
+ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device,
+	ID3D12GraphicsCommandList* commandList) {
 
+	std::vector<D3D12_SUBRESOURCE_DATA> subresources;
+	DirectX::PrepareUpload(device, mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subresources);
+	uint64_t intermediateSize = GetRequiredIntermediateSize(texture, 0, UINT(subresources.size()));
+	ID3D12Resource* intermediateResource = CreateBufferResource(device, intermediateSize);
+	UpdateSubresources(commandList, texture, intermediateResource, 0, 0, UINT(subresources.size()), subresources.data());
+	// Textureへの転送後は利用できるよう、D3D12_RESOURCE_STATE_COPY_DESTからD3D12_RESOURCE_STATE_GENERIC_READへれ￥resourceStateを変更する
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = texture;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
+	commandList->ResourceBarrier(1, &barrier);
+	return intermediateResource;
 }
-
 ///-----------------------------------------------///
 //		depthStencilTextureResourceを作る			//
 ///-----------------------------------------------///
@@ -352,76 +353,62 @@ ID3D12Resource* CreateDepthStenciTextureResource(ID3D12Device* device, int32_t w
 	//データを返す
 	return resource;
 }
-
 void CreateSphereVertexData(VertexData vertexData[]) {
+	const uint32_t kSubdivision = 16; // 分割数
 
-	const uint32_t kSubdivision = 16;						//分割数
-
-	//経度分割1つ分の角度
+	// 経度分割1つ分の角度
 	const float kLonEvery = (2 * float(M_PI)) / kSubdivision;
-	//緯度分割1つ分の角度
+	// 緯度分割1つ分の角度
 	const float kLatEvery = float(M_PI) / kSubdivision;
 
-	// φd=klon　経度
-	// φ=lon　経度
-
-	// θd=klat　緯度
-	// θ=lat　緯度
-
-
-	//緯度の方向に分割 -π/2 ~-π/2
+	// 緯度の方向に分割 -π/2 ~ π/2
 	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-		float lat = (-float(M_PI) / 2.0f) + kLatEvery * latIndex;//現在の緯度
+		float lat = (-float(M_PI) / 2.0f) + kLatEvery * latIndex; // 現在の緯度
 
-		//経度の方向に分割0 ~ 2π
+		// 経度の方向に分割 0 ~ 2π
 		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-			//*6しているのは4つの位置を6頂点(三角形２つの)データに書き込むから
-			float lon = lonIndex * kLonEvery;//現在の経度
-		uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
-			//頂点データを入力する
+			float lon = lonIndex * kLonEvery; // 現在の経度
+			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
 
-			//a
+			// a
 			vertexData[start].position.x = cos(lat) * cos(lon);
 			vertexData[start].position.y = sin(lat);
 			vertexData[start].position.z = cos(lat) * sin(lon);
 			vertexData[start].position.w = 1.0f;
-			vertexData[start].texcoord = { static_cast<float>(lonIndex) / kSubdivision, static_cast<float>(latIndex + 1) / kSubdivision };
+			vertexData[start].texcoord.x = static_cast<float>(lonIndex) / kSubdivision;
+			vertexData[start].texcoord.y = static_cast<float>(latIndex + 1) / kSubdivision;
 
-			//b
+			// b
 			vertexData[start + 1].position.x = cos(lat + kLatEvery) * cos(lon);
 			vertexData[start + 1].position.y = sin(lat + kLatEvery);
 			vertexData[start + 1].position.z = cos(lat + kLatEvery) * sin(lon);
 			vertexData[start + 1].position.w = 1.0f;
-			vertexData[start + 1].texcoord = { static_cast<float>(lonIndex) / kSubdivision, static_cast<float>(latIndex) / kSubdivision };
+			vertexData[start + 1].texcoord.x = static_cast<float>(lonIndex) / kSubdivision;
+			vertexData[start + 1].texcoord.y = static_cast<float>(latIndex) / kSubdivision;
 
-			//c
+			// c
 			vertexData[start + 2].position.x = cos(lat) * cos(lon + kLonEvery);
 			vertexData[start + 2].position.y = sin(lat);
 			vertexData[start + 2].position.z = cos(lat) * sin(lon + kLonEvery);
 			vertexData[start + 2].position.w = 1.0f;
-			vertexData[start + 2].texcoord = { static_cast<float>(lonIndex + 1) / kSubdivision, static_cast<float>(latIndex + 1) / kSubdivision };
+			vertexData[start + 2].texcoord.x = static_cast<float>(lonIndex + 1) / kSubdivision;
+			vertexData[start + 2].texcoord.y = static_cast<float>(latIndex + 1) / kSubdivision;
 
-			//b
-			vertexData[start + 3].position.x = cos(lat + kLatEvery) * cos(lon);
-			vertexData[start + 3].position.y = sin(lat + kLatEvery);
-			vertexData[start + 3].position.z = cos(lat + kLatEvery) * sin(lon);
-			vertexData[start + 3].position.w = 1.0f;
-			vertexData[start + 3].texcoord = { static_cast<float>(lonIndex) / kSubdivision, static_cast<float>(latIndex) / kSubdivision };
+			// b (再利用)
+			vertexData[start + 3].position = vertexData[start + 1].position;
+			vertexData[start + 3].texcoord = vertexData[start + 1].texcoord;
 
-			//d
+			// d
 			vertexData[start + 4].position.x = cos(lat + kLatEvery) * cos(lon + kLonEvery);
 			vertexData[start + 4].position.y = sin(lat + kLatEvery);
 			vertexData[start + 4].position.z = cos(lat + kLatEvery) * sin(lon + kLonEvery);
 			vertexData[start + 4].position.w = 1.0f;
-			vertexData[start + 4].texcoord = { static_cast<float>(lonIndex +1) / kSubdivision, static_cast<float>(latIndex) / kSubdivision };
+			vertexData[start + 4].texcoord.x = static_cast<float>(lonIndex + 1) / kSubdivision;
+			vertexData[start + 4].texcoord.y = static_cast<float>(latIndex) / kSubdivision;
 
-			//c
-			vertexData[start + 5].position.x = cos(lat) * cos(lon + kLonEvery);
-			vertexData[start + 5].position.y = sin(lat);
-			vertexData[start + 5].position.z = cos(lat) * sin(lon + kLonEvery);
-			vertexData[start + 5].position.w = 1.0f;
-			vertexData[start + 5].texcoord = { static_cast<float>(lonIndex + 1) / kSubdivision, static_cast<float>(latIndex + 1) / kSubdivision };
-		
+			// c (再利用)
+			vertexData[start + 5].position = vertexData[start + 2].position;
+			vertexData[start + 5].texcoord = vertexData[start + 2].texcoord;
 		}
 	}
 }
@@ -716,7 +703,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 	ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
-	UploadTextureData(textureResource, mipImages);
+	ID3D12Resource* intermediateResource = UploadTextureData(textureResource, mipImages, device, commandList);
 
 	//
 	///		DSV（デプスステンシルビュー）を作る
@@ -947,10 +934,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/// VertexResourcesを生成する
 	//
 
-
-	//球体を作成
-	//縦の分割数*横の分割数*調点数（6）
-	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * (16*16*6));
+	//三角形1つに3つの頂点
+	//二つ作りたいので6
+	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
 
 	//
 	///VertexBufferviewを作成する
@@ -962,7 +948,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 	//使用するリソースのサイズは頂点3つ分のサイズ
 	//二つ分なので６
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * (16*16*6);
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * 6;
 	// 1頂点あたりのサイズ
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
@@ -1001,14 +987,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/// Resourceにデータを書き込む
 	//
 
-
 	/// 三角形の頂点リソースにデータを書き込む
 	VertexData* vertexData = nullptr;
 	// 書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-
-
-	CreateSphereVertexData(vertexData);
+	// 左下	
+	vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
+	vertexData[0].texcoord = { 0.0f, 1.0f };
+	// 上	
+	vertexData[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
+	vertexData[1].texcoord = { 0.5f, 0.0f };
+	// 右下	
+	vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
+	vertexData[2].texcoord = { 1.0f, 1.0f };
+	// 左下	
+	vertexData[3].position = { -0.5f, -0.5f, 0.5f, 1.0f };
+	vertexData[3].texcoord = { 0.0f, 1.0f };
+	// 上	
+	vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
+	vertexData[4].texcoord = { 0.5f, 0.0f };
+	// 右下	
+	vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
+	vertexData[5].texcoord = { 1.0f, 1.0f };
 
 
 
@@ -1072,6 +1072,50 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexDataSprite[5].texcoord = { 1.0f,1.0f };
 
 
+	///*========		球体Sphere		========*///
+
+	//
+	/// 球体用のResourceにデータを書き込む
+	//
+
+	ID3D12Resource* vertexResourceSphere = CreateBufferResource(device, sizeof(VertexData) * (16 * 16 * 6));
+
+	//
+	///VertexBufferviewを作成する
+	//
+
+	//頂点バッファビューを作成する
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSphere{};
+	//リリースの先頭のアドレスから使う
+	vertexBufferViewSphere.BufferLocation = vertexResourceSphere->GetGPUVirtualAddress();
+
+	vertexBufferViewSphere.SizeInBytes = sizeof(VertexData) * (16 * 16 * 6);
+	// 1頂点あたりのサイズ
+	vertexBufferViewSphere.StrideInBytes = sizeof(VertexData);
+	//
+	///	TransformationMatrix用のリソースを作る
+	//
+
+
+	//WVP用のリソースを作る、Matrix4x4　１つ分のサイズを用意する
+	ID3D12Resource* wvpResourceSphere = CreateBufferResource(device, sizeof(Matrix4x4));
+	//データを書き込む
+	Matrix4x4* wvpDataSphere = nullptr;
+	//書き込むためのアドレスを取得
+	wvpResourceSphere->Map(0, nullptr, reinterpret_cast<void**>(&wvpDataSphere));
+	//単位行列を書き込んでおく
+	*wvpDataSphere = MakeIdentity4x4();
+	//
+	/// Resourceにデータを書き込む
+	//
+
+	/// 三角形の頂点リソースにデータを書き込む
+	VertexData* vertexDataSphere = nullptr;
+	// 書き込むためのアドレスを取得
+	vertexResourceSphere->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSphere));
+	CreateSphereVertexData(vertexDataSphere);
+
+
 	//
 	///	ビューポート
 	//
@@ -1131,6 +1175,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{0.0f,0.0f,0.0f}
 	};
 
+	///Transforom変数を作る
+	Vector3Transform transformSphere{
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
 
 	/// WorldViewProjectionMatrixを作る
 	Vector3Transform cameraTransform{
@@ -1162,6 +1212,39 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			///		 ゲームの処理			///
 			///							///
 
+			transform.rotate.y += 0.01f;
+
+			/// 三角形のwvp行列を作成
+			Matrix4x4 worldMatrix = MakeAffineMatrix(
+				transform.scale, transform.rotate, transform.translate
+			);
+			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f,
+				float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+
+			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+
+			*wvpData = worldViewProjectionMatrix;
+
+			/// 球体のwvp行列を作成
+			Matrix4x4 worldMatrixSphere = MakeAffineMatrix(
+				transformSphere.scale, transformSphere.rotate, transformSphere.translate
+			);
+			Matrix4x4 worldViewProjectionMatrixSphere = Multiply(worldMatrixSphere, Multiply(viewMatrix, projectionMatrix));
+			*wvpDataSphere = worldViewProjectionMatrix;
+
+			/// Sprite用のWorldViewProjectionMatrixを作る
+			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(
+				transformSprite.scale,
+				transformSprite.rotate,
+				transformSprite.translate);
+			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
+			Matrix4x4 projectionMatrixSprite =
+				MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
+			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
+
+			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
 
 
 
@@ -1238,7 +1321,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 描画（DrawCall／ドローコール）。３頂点で1つのインスタンス
 			//三角形を二つ描画するので6つ
-			commandList->DrawInstanced(16*16*6, 1, 0, 0);
+			//commandList->DrawInstanced(6, 1, 0, 0);
+
+
+
+			//球体を描画する
+			//分割数*分割数*6
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSphere);
+			//TransformMatrixCBufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResourceSphere->GetGPUVirtualAddress());
+			// 描画（DrawCall／ドローコール）。
+			commandList->DrawInstanced(16 * 16 * 6, 1, 0, 0);
 
 
 			///
@@ -1260,36 +1353,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::DragFloat3("Sprite_Translate", &transformSprite.translate.x, 0.01f);
 
 			ImGui::End();
-
-			transform.rotate.y += 0.01f;
-			/// 三角形のwvp行列を作成
-			Matrix4x4 worldMatrix = MakeAffineMatrix(
-				transform.scale, transform.rotate, transform.translate
-			);
-			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f,
-				float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
-
-			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-
-			*wvpData = worldViewProjectionMatrix;
-
-
-
-			/// Sprite用のWorldViewProjectionMatrixを作る
-			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(
-				transformSprite.scale,
-				transformSprite.rotate,
-				transformSprite.translate);
-			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-			Matrix4x4 projectionMatrixSprite =
-				MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
-
-			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
-
-
 
 			ImGui::Render();
 
@@ -1361,7 +1424,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	///テクスチャリソース
 	textureResource->Release();
-
+	intermediateResource->Release();
 
 	///三角形を生成するのに必要なもの
 	vertexResource->Release();
