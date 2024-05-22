@@ -1246,7 +1246,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
 
-
+			ImGui::ShowDemoWindow();
+			ImGui::Begin("setting");
+			ImGui::ColorPicker3("material", &materialData->x);
+			ImGui::DragFloat3("Sprite_Translate", &transformSprite.translate.x, 0.01f);
+			ImGui::End();
 
 			//
 			///画面をクリアする処理が含まれたコマンドリストを作る
@@ -1346,13 +1350,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//三角形を二つ描画するので6つ
 			commandList->DrawInstanced(6, 1, 0, 0);
 
-
-			ImGui::ShowDemoWindow();
-			ImGui::Begin("setting");
-			ImGui::ColorPicker3("material", &materialData->x);
-			ImGui::DragFloat3("Sprite_Translate", &transformSprite.translate.x, 0.01f);
-
-			ImGui::End();
 
 			ImGui::Render();
 
