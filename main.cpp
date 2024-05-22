@@ -376,7 +376,7 @@ void CreateSphereVertexData(VertexData vertexData[]) {
 			vertexData[start].position.z = cos(lat) * sin(lon);
 			vertexData[start].position.w = 1.0f;
 			vertexData[start].texcoord.x = static_cast<float>(lonIndex) / kSubdivision;
-			vertexData[start].texcoord.y = static_cast<float>(latIndex + 1) / kSubdivision;
+			vertexData[start].texcoord.y =1.0f-static_cast<float>(latIndex ) / kSubdivision;
 
 			// b
 			vertexData[start + 1].position.x = cos(lat + kLatEvery) * cos(lon);
@@ -384,7 +384,7 @@ void CreateSphereVertexData(VertexData vertexData[]) {
 			vertexData[start + 1].position.z = cos(lat + kLatEvery) * sin(lon);
 			vertexData[start + 1].position.w = 1.0f;
 			vertexData[start + 1].texcoord.x = static_cast<float>(lonIndex) / kSubdivision;
-			vertexData[start + 1].texcoord.y = static_cast<float>(latIndex) / kSubdivision;
+			vertexData[start + 1].texcoord.y = 1.0f - static_cast<float>(latIndex+1) / kSubdivision;
 
 			// c
 			vertexData[start + 2].position.x = cos(lat) * cos(lon + kLonEvery);
@@ -392,7 +392,7 @@ void CreateSphereVertexData(VertexData vertexData[]) {
 			vertexData[start + 2].position.z = cos(lat) * sin(lon + kLonEvery);
 			vertexData[start + 2].position.w = 1.0f;
 			vertexData[start + 2].texcoord.x = static_cast<float>(lonIndex + 1) / kSubdivision;
-			vertexData[start + 2].texcoord.y = static_cast<float>(latIndex + 1) / kSubdivision;
+			vertexData[start + 2].texcoord.y = 1.0f - static_cast<float>(latIndex ) / kSubdivision;
 
 			// b (再利用)
 			vertexData[start + 3].position = vertexData[start + 1].position;
@@ -404,7 +404,7 @@ void CreateSphereVertexData(VertexData vertexData[]) {
 			vertexData[start + 4].position.z = cos(lat + kLatEvery) * sin(lon + kLonEvery);
 			vertexData[start + 4].position.w = 1.0f;
 			vertexData[start + 4].texcoord.x = static_cast<float>(lonIndex + 1) / kSubdivision;
-			vertexData[start + 4].texcoord.y = static_cast<float>(latIndex) / kSubdivision;
+			vertexData[start + 4].texcoord.y = 1.0f - static_cast<float>(latIndex+1) / kSubdivision;
 
 			// c (再利用)
 			vertexData[start + 5].position = vertexData[start + 2].position;
@@ -1248,7 +1248,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			ImGui::ShowDemoWindow();
 			ImGui::Begin("setting");
-			ImGui::ColorPicker3("material", &materialData->x);
+			ImGui::ColorEdit3("material", &materialData->x);
 			ImGui::DragFloat3("Sprite_Translate", &transformSprite.translate.x, 0.01f);
 			ImGui::End();
 
@@ -1410,8 +1410,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	///					解放処理						///
 	//*-----------------------------------------------*//
 
-
-
+	vertexResourceSphere->Release();
+	wvpResourceSphere->Release();
+	
 	///Spriteを生成するのに必要なもの
 	vertexResourceSprite->Release();
 	transformationMatrixResourceSprite->Release();
