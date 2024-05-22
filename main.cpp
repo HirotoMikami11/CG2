@@ -356,77 +356,52 @@ ID3D12Resource* CreateDepthStenciTextureResource(ID3D12Device* device, int32_t w
 }
 
 
-void DrawImGui() {
+void DrawImGui(Vector4* materialData, Vector3Transform& transform) {
 
 	ImGui::ShowDemoWindow();
 	if (ImGui::Begin("Settings")) {
-		// トップレベルのツリーノード: Settings
-		if (ImGui::TreeNode("Settings")) {
 
-			// モデル選択のためのコンボボックス
-			const char* items[] = { "Triangle", "Square", "Circle" };
-			static int item_current = 0;
-			ImGui::Combo("##model", &item_current, items, IM_ARRAYSIZE(items));
-			ImGui::SameLine();
-			ImGui::Text("Model");
 
-			// Createボタン
-			if (ImGui::Button("Create")) {
-				// ボタンが押されたときの処理
-			}
 
 			// Objectノード
-			if (ImGui::TreeNode("Object")) {
+			if (ImGui::TreeNode("Object1")) {
 				// Translate, Rotate, Scaleの各フィールド
-				/*ImGui::InputFloat3("##Translate", (float[]) { 0.0f, -0.75f, 0.0f }, "%.3f", ImGuiInputTextFlags_ReadOnly);*/
+				ImGui::DragFloat3("##Translate", &transform.translate.x, 0.01f, -3, 3);
 				ImGui::SameLine();
 				ImGui::Text("Translate");
 
-				/*ImGui::InputFloat3("##Rotate", (float[]) { 0.0f, 0.0f, 0.0f }, "%.3f", ImGuiInputTextFlags_ReadOnly);*/
+				ImGui::DragFloat3("##Rotate", &transform.rotate.x, 0.01f, -3, 3);
 				ImGui::SameLine();
 				ImGui::Text("Rotate");
 
-	/*			ImGui::InputFloat3("##Scale", (float[]) { 1.0f, 0.71f, 1.0f }, "%.3f", ImGuiInputTextFlags_ReadOnly);*/
+				ImGui::DragFloat3("##Scale", &transform.scale.x, 0.01f, -5, 5);
 				ImGui::SameLine();
 				ImGui::Text("Scale");
-
-				if (ImGui::Button("Delete")) {
-					// Deleteボタンが押されたときの処理
-				}
+				ImGui::ColorEdit4("MyColor", (float*)materialData);
 
 				ImGui::TreePop();
 			}
 
-			// Materialノード
-			if (ImGui::TreeNode("Material")) {
-				// Objectノード
-				if (ImGui::TreeNode("Object")) {
-					// Translate, Rotate, Scaleの各フィールド
-		/*			ImGui::InputFloat3("##Translate2", (float[]) { 0.0f, -0.28f, 0.0f }, "%.3f", ImGuiInputTextFlags_ReadOnly);*/
-					ImGui::SameLine();
-					ImGui::Text("Translate");
+			// Objectノード
+			if (ImGui::TreeNode("Object2")) {
+				// Translate, Rotate, Scaleの各フィールド
+				ImGui::DragFloat3("##Translate", &transform.translate.x, 0.01f, -3, 3);
+				ImGui::SameLine();
+				ImGui::Text("Translate");
 
-				/*	ImGui::InputFloat3("##Rotate2", (float[]) { 0.0f, 0.97f, 0.0f }, "%.3f", ImGuiInputTextFlags_ReadOnly);*/
-					ImGui::SameLine();
-					ImGui::Text("Rotate");
+				ImGui::DragFloat3("##Rotate", &transform.rotate.x, 0.01f, -3, 3);
+				ImGui::SameLine();
+				ImGui::Text("Rotate");
 
-					//ImGui::InputFloat3("##Scale2", (float[]) { 1.0f, 1.0f, 1.0f }, "%.3f", ImGuiInputTextFlags_ReadOnly);
-					ImGui::SameLine();
-					ImGui::Text("Scale");
+				ImGui::DragFloat3("##Scale", &transform.scale.x, 0.01f, -5, 5);
+				ImGui::SameLine();
+				ImGui::Text("Scale");
+				ImGui::ColorEdit4("MyColor", (float*)materialData);
 
-					if (ImGui::Button("Delete")) {
-						// Deleteボタンが押されたときの処理
-					}
-
-					ImGui::TreePop();
-				}
 				ImGui::TreePop();
 			}
 
-			// Lightノード
-			ImGui::TreeNode("Light");
-			ImGui::TreePop();
-		}
+		
 
 		ImGui::End();
 	}
@@ -1089,7 +1064,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{0.0f,0.0f,0.0f}
 	};
 
-
+	///Transforom変数を作る
+	Vector3Transform transform{
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
 
 	/// WorldViewProjectionMatrixを作る
 	Vector3Transform cameraTransform{
@@ -1199,9 +1179,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//三角形を二つ描画するので6つ
 			commandList->DrawInstanced(6, 1, 0, 0);
 
-			DrawImGui();
 
-			transform.rotate.y += 0.01f;
+
+			//transform.rotate.y += 0.01f;
 			/// 三角形のwvp行列を作成
 			Matrix4x4 worldMatrix = MakeAffineMatrix(
 				transform.scale, transform.rotate, transform.translate
@@ -1215,7 +1195,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			*wvpData = worldViewProjectionMatrix;
 
-
+			DrawImGui(materialData, transform);
 
 
 			ImGui::Render();
