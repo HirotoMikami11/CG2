@@ -376,7 +376,7 @@ void CreateSphereVertexData(VertexData vertexData[]) {
 			vertexData[start].position.z = cos(lat) * sin(lon);
 			vertexData[start].position.w = 1.0f;
 			vertexData[start].texcoord.x = static_cast<float>(lonIndex) / kSubdivision;
-			vertexData[start].texcoord.y =1.0f-static_cast<float>(latIndex ) / kSubdivision;
+			vertexData[start].texcoord.y = 1.0f - static_cast<float>(latIndex) / kSubdivision;
 
 			// b
 			vertexData[start + 1].position.x = cos(lat + kLatEvery) * cos(lon);
@@ -384,7 +384,7 @@ void CreateSphereVertexData(VertexData vertexData[]) {
 			vertexData[start + 1].position.z = cos(lat + kLatEvery) * sin(lon);
 			vertexData[start + 1].position.w = 1.0f;
 			vertexData[start + 1].texcoord.x = static_cast<float>(lonIndex) / kSubdivision;
-			vertexData[start + 1].texcoord.y = 1.0f - static_cast<float>(latIndex+1) / kSubdivision;
+			vertexData[start + 1].texcoord.y = 1.0f - static_cast<float>(latIndex + 1) / kSubdivision;
 
 			// c
 			vertexData[start + 2].position.x = cos(lat) * cos(lon + kLonEvery);
@@ -392,7 +392,7 @@ void CreateSphereVertexData(VertexData vertexData[]) {
 			vertexData[start + 2].position.z = cos(lat) * sin(lon + kLonEvery);
 			vertexData[start + 2].position.w = 1.0f;
 			vertexData[start + 2].texcoord.x = static_cast<float>(lonIndex + 1) / kSubdivision;
-			vertexData[start + 2].texcoord.y = 1.0f - static_cast<float>(latIndex ) / kSubdivision;
+			vertexData[start + 2].texcoord.y = 1.0f - static_cast<float>(latIndex) / kSubdivision;
 
 			// b (再利用)
 			vertexData[start + 3].position = vertexData[start + 1].position;
@@ -404,7 +404,7 @@ void CreateSphereVertexData(VertexData vertexData[]) {
 			vertexData[start + 4].position.z = cos(lat + kLatEvery) * sin(lon + kLonEvery);
 			vertexData[start + 4].position.w = 1.0f;
 			vertexData[start + 4].texcoord.x = static_cast<float>(lonIndex + 1) / kSubdivision;
-			vertexData[start + 4].texcoord.y = 1.0f - static_cast<float>(latIndex+1) / kSubdivision;
+			vertexData[start + 4].texcoord.y = 1.0f - static_cast<float>(latIndex + 1) / kSubdivision;
 
 			// c (再利用)
 			vertexData[start + 5].position = vertexData[start + 2].position;
@@ -412,6 +412,40 @@ void CreateSphereVertexData(VertexData vertexData[]) {
 		}
 	}
 }
+
+
+/// <summary>
+/// ディスクリプタヒープから特定のインデックスに対応するCPUディスクリプタハンドルを取得する
+/// </summary>
+
+D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index) {
+	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	handleCPU.ptr += (descriptorSize * index);
+	return handleCPU;
+}
+/// <summary>
+/// ディスクリプタヒープから特定のインデックスに対応する GPUディスクリプタハンドルを取得する
+/// </summary>
+
+D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index) {
+	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	handleGPU.ptr += (descriptorSize * index);
+	return handleGPU;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ///-----------------------------------------------///
@@ -536,6 +570,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//							
 
 	ID3D12Device* device = nullptr;
+
 	//機能レベルとログの出力用の文字列
 	D3D_FEATURE_LEVEL featureLevels[] = {
 		D3D_FEATURE_LEVEL_12_2,
@@ -651,6 +686,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	///　descriptorHeapを生成する
 	//
 
+	//	descriptorSizeを取得 
+	//ゲーム中に変化することがないため、ゲーム開始時にサイズを取得する
+
+	const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	const uint32_t descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	const uint32_t descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
 	//RTVディスクリプタヒープの生成
 	ID3D12DescriptorHeap* rtvDescriptorHeap = CreateDescroptorHeap(
 		device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
@@ -683,7 +725,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;			//出力結果をSRGBに変換して書き込むf
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;		//2dテクスチャとして書き込む
 	//ディスクリプタの先頭を取得する
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = GetCPUDescriptorHandle(rtvDescriptorHeap, descriptorSizeRTV, 0);
 	//RTVを2つ作るのでディスクリプタを2つ用意
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
 	//まず1つ目を作る。1つ目は最初のところに作る。作る場所をこちらで指定してあげる必要がある
@@ -700,10 +742,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//
 
 	//textureを読んで転送する
-	DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
-	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	DirectX::ScratchImage mipImages[2];
+
+	mipImages[0] = LoadTexture("resources/uvChecker.png");
+	const DirectX::TexMetadata& metadata = mipImages[0].GetMetadata();
 	ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
-	ID3D12Resource* intermediateResource = UploadTextureData(textureResource, mipImages, device, commandList);
+	ID3D12Resource* intermediateResource = UploadTextureData(textureResource, mipImages[0], device, commandList);
+	
+	//2枚目のtextureを読んで転送する
+	mipImages[1] = LoadTexture("resources/monsterBall.png");
+	const DirectX::TexMetadata& metadata2 = mipImages[1].GetMetadata();
+	ID3D12Resource* textureResource2 = CreateTextureResource(device, metadata2);
+	ID3D12Resource* intermediateResource2 = UploadTextureData(textureResource2, mipImages[1], device, commandList);
+
 
 	//
 	///		DSV（デプスステンシルビュー）を作る
@@ -716,7 +767,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;			//Formatは基本的にResourceに合わせる
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;	//2dTexture
 	//dsVHeapの先頭にDSVを作る
-	device->CreateDepthStencilView(depthStencilResource, &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	device->CreateDepthStencilView(depthStencilResource, &dsvDesc, GetCPUDescriptorHandle(dsvDescriptorHeap, descriptorSizeDSV, 0));
 
 
 
@@ -728,14 +779,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
 
 	//SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	//先頭はImGuiが使っているのでその次を使う
-	textureSrvHandleCPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);//現在のディスクリプタヒープの次の位置を指定？
-	textureSrvHandleGPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);//現在のディスクリプタヒープの次の位置を指定？
-
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 1);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 1);
 	//SRVの生成
 	device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
+
+	//2つめのmetadataを基にSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
+	srvDesc2.Format = metadata2.format;
+	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャ
+	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
+	//SRVの生成
+	device->CreateShaderResourceView(textureResource2, &srvDesc2, textureSrvHandleCPU2);
+
+
 
 
 
@@ -1151,8 +1212,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		swapChainDesc.BufferCount,
 		rtvDesc.Format,
 		srvDescriptorHeap,
-		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
+		GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 0),
+		GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 0)
 	);
 
 
@@ -1188,6 +1249,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,-10.0f}
 	};
+
+
+
+	///Imguiで画像を切り替える
+	bool useMonsterBall = true;
+
 
 
 	///-----------------------------------------------///
@@ -1248,8 +1315,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			ImGui::ShowDemoWindow();
 			ImGui::Begin("setting");
-			ImGui::ColorEdit3("material", &materialData->x);
+			ImGui::ColorEdit3("materialColor", &materialData->x);
 			ImGui::DragFloat3("Sprite_Translate", &transformSprite.translate.x, 0.01f);
+			ImGui::Checkbox("useMonsterBall",&useMonsterBall);
 			ImGui::End();
 
 			//
@@ -1283,7 +1351,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//
 
 			//描画先のRTVとDSVを設定する
-			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle =
+				GetCPUDescriptorHandle(dsvDescriptorHeap, descriptorSizeDSV, 0);
 			commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
 
 			// 指定した色で画面全体をクリアする
@@ -1321,7 +1390,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				wvpResource->GetGPUVirtualAddress());
 
 			//SRVのDescriptorTableの先頭を設定、2はrootParameter[2]である
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			//commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 
 			// 描画（DrawCall／ドローコール）。３頂点で1つのインスタンス
 			//三角形を二つ描画するので6つ
@@ -1341,6 +1411,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			///
 			///	2Dの描画
 			/// 
+			
+			//blendModeみたいな感じで描画する前にSRVを設定する
+			commandList->SetGraphicsRootDescriptorTable(2,textureSrvHandleGPU);
 
 			//Spriteの描画
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
@@ -1412,7 +1485,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	vertexResourceSphere->Release();
 	wvpResourceSphere->Release();
-	
+
 	///Spriteを生成するのに必要なもの
 	vertexResourceSprite->Release();
 	transformationMatrixResourceSprite->Release();
@@ -1423,6 +1496,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	///テクスチャリソース
 	textureResource->Release();
 	intermediateResource->Release();
+
+	textureResource2->Release();
+	intermediateResource2->Release();
+
 
 	///三角形を生成するのに必要なもの
 	vertexResource->Release();
